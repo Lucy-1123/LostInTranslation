@@ -1,7 +1,14 @@
 package translation;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.List;
 
 
 // TODO Task D: Update the GUI for the program to align with UI shown in the README example.
@@ -11,14 +18,40 @@ import java.awt.event.*;
 //            the GUI.
 public class GUI {
 
+    private static final List<String> CountryNames = new ArrayList<>();
+
+    private static void GetCountryNames() {
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(GUI.class
+                    .getClassLoader().getResource("language-codes.txt").toURI()));
+
+            Iterator<String> iterator = lines.iterator();
+            iterator.next(); // skip the first line
+            while (iterator.hasNext()) {
+                String line = iterator.next();
+                String regex = "[,\\.\\s]";
+                String[] splitted = line.split(regex);
+                CountryNames.add(splitted[0]);
+            }
+        } catch (IOException | URISyntaxException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JPanel countryPanel = new JPanel();
+            GetCountryNames();
+            JList<String> list = new JList<>(CountryNames.toArray(new String[0]));
+            list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+            list.setLayoutOrientation(JList.VERTICAL);
+            list.setVisibleRowCount(-1);
+            JScrollPane listScroller = new JScrollPane(list);
+            listScroller.setPreferredSize(new Dimension(250, 80));
+//            JPanel countryPanel = new JPanel();
             JTextField countryField = new JTextField(10);
-            countryField.setText("can");
-            countryField.setEditable(false); // we only support the "can" country code for now
-            countryPanel.add(new JLabel("Country:"));
-            countryPanel.add(countryField);
+            listScroller.add(new JLabel("Country:"));
+            listScroller.add(countryField);
+
 
             JPanel languagePanel = new JPanel();
             JTextField languageField = new JTextField(10);
@@ -58,7 +91,7 @@ public class GUI {
 
             JPanel mainPanel = new JPanel();
             mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-            mainPanel.add(countryPanel);
+            mainPanel.add(listScroller);
             mainPanel.add(languagePanel);
             mainPanel.add(buttonPanel);
 
